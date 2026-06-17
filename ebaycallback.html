@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RoboList — Returning to app</title>
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; max-width: 32rem; margin: 4rem auto; padding: 0 1.25rem; color: #222; line-height: 1.5; }
+  a { color: #1565c0; word-break: break-all; }
+  .muted { color: #666; font-size: 0.9rem; }
+</style>
+</head>
+<body>
+<h1>Returning to RoboList…</h1>
+<p id="msg">Handing your eBay authorization back to the app.</p>
+<p class="muted">If the app doesn't reopen automatically, tap the link below, then return to RoboList.</p>
+<p><a id="deeplink" href="#">Open RoboList</a></p>
+<script>
+  // eBay redirects here with ?code=... (success) or ?error=... (declined).
+  // This page only forwards that result to the RoboList app's custom scheme;
+  // it stores nothing and contains no secrets. The auth code is single-use,
+  // short-lived, and useless without the user's eBay client secret (on-device).
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var code = q.get('code');
+    var err = q.get('error') || q.get('error_description');
+    var target = 'robolist://ebay/callback?' +
+      (code ? 'code=' + encodeURIComponent(code)
+            : 'error=' + encodeURIComponent(err || 'declined'));
+    var link = document.getElementById('deeplink');
+    link.href = target;
+    if (!code && !err) {
+      document.getElementById('msg').textContent =
+        'No authorization parameters were received. Please retry the connection from RoboList.';
+      return;
+    }
+    location.replace(target);
+  })();
+</script>
+</body>
+</html>

@@ -20,13 +20,21 @@
   // This page only forwards that result to the RoboList app's custom scheme;
   // it stores nothing and contains no secrets. The auth code is single-use,
   // short-lived, and useless without the user's eBay client secret (on-device).
+  //
+  // `state` MUST be forwarded on both paths: the app rejects any redirect
+  // whose state doesn't match the one it sent (CSRF check, since #75). eBay
+  // echoes it back here -- "If you supplied a state parameter in your consent
+  // request, it is also returned in the redirect URL" (developer.ebay.com,
+  // oauth-consent-request). Dropping it broke every sign-in from #75 on.
   (function () {
     var q = new URLSearchParams(location.search);
     var code = q.get('code');
     var err = q.get('error') || q.get('error_description');
+    var state = q.get('state');
     var target = 'robolist://ebay/callback?' +
       (code ? 'code=' + encodeURIComponent(code)
-            : 'error=' + encodeURIComponent(err || 'declined'));
+            : 'error=' + encodeURIComponent(err || 'declined')) +
+      (state ? '&state=' + encodeURIComponent(state) : '');
     var link = document.getElementById('deeplink');
     link.href = target;
     if (!code && !err) {
